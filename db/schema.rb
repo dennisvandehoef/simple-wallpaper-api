@@ -10,11 +10,12 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_13_120001) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_13_122500) do
   create_table "tag_groups", force: :cascade do |t|
     t.string "name", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "system", default: false, null: false
     t.index ["name"], name: "index_tag_groups_on_name", unique: true
   end
 
@@ -23,6 +24,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_13_120001) do
     t.integer "tag_group_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "system", default: false, null: false
     t.index ["tag_group_id", "name"], name: "index_tags_on_tag_group_id_and_name", unique: true
     t.index ["tag_group_id"], name: "index_tags_on_tag_group_id"
   end
