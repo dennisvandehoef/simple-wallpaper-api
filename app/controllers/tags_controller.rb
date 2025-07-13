@@ -1,6 +1,7 @@
 class TagsController < ApplicationController
   before_action :set_tag_group
   before_action :set_tag, only: %i[edit update destroy]
+  before_action :ensure_editable, only: %i[edit update destroy]
 
   # GET /tag_groups/:tag_group_id/tags/new
   def new
@@ -33,6 +34,12 @@ class TagsController < ApplicationController
   def destroy
     @tag.destroy
     redirect_to @tag_group, notice: "Tag was successfully deleted."
+  end
+
+  def ensure_editable
+    if @tag.system?
+      redirect_to @tag_group, alert: "System tags cannot be modified." and return
+    end
   end
 
   private

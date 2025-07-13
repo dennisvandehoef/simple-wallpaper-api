@@ -14,5 +14,6 @@
         %td= link_to group.name, tag_group_path(group)
         %td
           = link_to 'Show', tag_group_path(group)
-          = link_to 'Edit', edit_tag_group_path(group)
-          = button_to 'Delete', tag_group_path(group), method: :delete, data: { confirm: 'Are you sure?' }, form: { style: 'display:inline' }
+          - unless group.system?
+            = link_to 'Edit', edit_tag_group_path(group)
+            = button_to 'Delete', tag_group_path(group), method: :delete, data: { confirm: 'Are you sure?' }, form: { style: 'display:inline' }
