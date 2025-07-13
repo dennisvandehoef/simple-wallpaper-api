@@ -1,0 +1,16 @@
+%h1
+  - if @image.file.attached?
+    = @image.file.filename.to_s
+  - else
+    = "Image ##{@image.id}"
+
+%p
+  = link_to 'Back', images_path
+  |
+  = link_to 'Upload Another', new_image_path
+  |
+  = button_to 'Delete', image_path(@image), method: :delete, data: { confirm: 'Are you sure?' }, form: { style: 'display:inline' }
+
+%h2 Image
+- if @image.file.attached?
+  = image_tag url_for(@image.file)

@@ -1,0 +1,14 @@
+= form_with(model: image, local: true, html: { multipart: true }) do |f|
+  - if image.errors.any?
+    #error_explanation
+      %h2= "#{pluralize(image.errors.count, 'error')} prohibited this image from being saved:"
+      %ul
+        - image.errors.full_messages.each do |message|
+          %li= message
+
+  .field
+    = f.label :file, 'Image file'
+    = f.file_field :file, direct_upload: true
+
+  .actions
+    = f.submit 'Upload'

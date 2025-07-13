@@ -13,7 +13,7 @@ WORKDIR /rails
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y \
     build-essential git libyaml-dev pkg-config \
-    curl libjemalloc2 libvips sqlite3 \
+    curl libjemalloc2 libvips sqlite3 imagemagick \
     && rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 # Install gems first (leverages Docker layer cache)

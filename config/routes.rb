@@ -19,6 +19,8 @@ Rails.application.routes.draw do
   root "home#index"
 
   resources :tag_groups do
-    resources :tags, except: [:index, :show]
+    resources :tags, except: [ :index, :show ]
   end
+
+  resources :images, only: [ :index, :new, :create, :show, :destroy ]
 end
