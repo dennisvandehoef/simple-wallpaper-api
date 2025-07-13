@@ -1,0 +1,18 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        RUBY_VERSION: "3.3.6"
+    image: simple_wallpaper_api:latest
+    ports:
+      - "3000:3000"
+    environment:
+      # Run in development mode for live reload and gem installation within the container
+      RAILS_ENV: development
+      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+    volumes:
+      - ./:/rails
+    restart: unless-stopped
