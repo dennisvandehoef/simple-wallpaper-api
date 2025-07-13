@@ -18,8 +18,8 @@ secrets:
 	  ruby -e 'require "securerandom"; puts SecureRandom.hex(64)' > config/secret_key_base; \
 	fi && \
 	if [ ! -f config/master.key ]; then \
-	  echo "[secrets] Generating new RAILS_MASTER_KEY → config/master.key"; \
-	  ruby -e 'require "securerandom"; puts SecureRandom.hex(32)' > config/master.key; \
+	  echo "[secrets] Generating new 16-byte RAILS_MASTER_KEY → config/master.key"; \
+	  ruby -e 'require "securerandom"; puts SecureRandom.hex(16)' > config/master.key; \
 	fi
 
 # ------------------------------------------------------------------------------
