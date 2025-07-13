@@ -1,4 +1,7 @@
-%h1= @tag_group.name
+%h1
+  = @tag_group.name
+  - if @tag_group.system?
+    %span.badge System
 
 %p
   = link_to 'Back', tag_groups_path

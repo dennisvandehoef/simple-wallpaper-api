@@ -11,7 +11,10 @@
   %tbody
     - @tag_groups.each do |group|
       %tr
-        %td= link_to group.name, tag_group_path(group)
+        %td
+          = link_to group.name, tag_group_path(group)
+          - if group.system?
+            %span.badge System
         %td
           = link_to 'Show', tag_group_path(group)
           - unless group.system?
