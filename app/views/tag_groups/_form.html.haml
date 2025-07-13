@@ -1,0 +1,14 @@
+= form_with(model: tag_group, local: true) do |f|
+  - if tag_group.errors.any?
+    #error_explanation
+      %h2= "#{pluralize(tag_group.errors.count, 'error')} prohibited this tag group from being saved:"
+      %ul
+        - tag_group.errors.full_messages.each do |message|
+          %li= message
+
+  .field
+    = f.label :name
+    = f.text_field :name
+
+  .actions
+    = f.submit

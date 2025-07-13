@@ -1,0 +1,24 @@
+%h1= @tag_group.name
+
+%p
+  = link_to 'Edit', edit_tag_group_path(@tag_group)
+  |
+  = link_to 'Back', tag_groups_path
+
+%h2 Tags
+
+%p
+  = link_to 'New Tag', new_tag_group_tag_path(@tag_group), class: 'button'
+
+%table
+  %thead
+    %tr
+      %th Name
+      %th Actions
+  %tbody
+    - @tag_group.tags.order(:name).each do |tag|
+      %tr
+        %td= tag.name
+        %td
+          = link_to 'Edit', edit_tag_group_tag_path(@tag_group, tag)
+          = button_to 'Delete', tag_group_tag_path(@tag_group, tag), method: :delete, data: { confirm: 'Are you sure?' }, form: { style: 'display:inline' }
