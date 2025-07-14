@@ -1,24 +1,7 @@
-# README
+# Simple Wallpaper API
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+This repository was quickly hacked together, using AI, to create a solution for changing wallpapers on smart home displays.
 
-Things you may want to cover:
+The main goal is to increase the WAF (Wife Approval Factor); therefore, I am currently focusing less on code quality and tests, which may be improved later.
 
-* Ruby version
-
-* System dependencies
-
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+At the moment, the solution relies on hard-coded images per month. With this application, I intend to show seasonally related pictures that also match the weather conditions of each day.
