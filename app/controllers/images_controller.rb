@@ -52,6 +52,25 @@ class ImagesController < ApplicationController
     redirect_to images_path, notice: "Image was successfully deleted."
   end
 
+  # GET /random_image
+  def random
+    image = Image.joins(file_attachment_attachment: :blob).order(Arel.sql("RANDOM()")).first || Image.joins(:file_attachment).order(Arel.sql("RANDOM()")).first rescue Image.order(Arel.sql("RANDOM()")).first
+
+    unless image&.file&.attached?
+      head :not_found and return
+    end
+
+    width_param  = params[:width].to_i if params[:width].present?
+    height_param = params[:height].to_i if params[:height].present?
+
+    if width_param.present? && width_param > 0 && height_param.present? && height_param > 0
+      variant = image.file.variant(resize_to_fill: [ width_param, height_param ]).processed
+      redirect_to url_for(variant), allow_other_host: true
+    else
+      redirect_to url_for(image.file), allow_other_host: true
+    end
+  end
+
   private
 
   def set_image

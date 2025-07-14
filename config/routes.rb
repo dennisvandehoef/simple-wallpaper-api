@@ -23,4 +23,6 @@ Rails.application.routes.draw do
   end
 
   resources :images, only: [ :index, :new, :create, :show, :edit, :update, :destroy ]
+  # Random image endpoint
+  get "random_image", to: "images#random", as: :random_image
 end
