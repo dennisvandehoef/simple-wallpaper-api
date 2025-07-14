@@ -64,7 +64,9 @@ class ImagesController < ApplicationController
     height_param = params[:height].to_i if params[:height].present?
 
     if width_param.present? && width_param > 0 && height_param.present? && height_param > 0
-      variant = image.file.variant(resize_to_fill: [ width_param, height_param ]).processed
+      gravity_option = image.crop_gravity.presence || "Center"
+
+      variant = image.file.variant(resize_to_fill: [ width_param, height_param, { gravity: gravity_option } ]).processed
       redirect_to url_for(variant), allow_other_host: true
     else
       redirect_to url_for(image.file), allow_other_host: true
@@ -78,6 +80,6 @@ class ImagesController < ApplicationController
   end
 
   def image_params
-    params.require(:image).permit(tag_ids: [])
+    params.require(:image).permit(:crop_gravity, tag_ids: [])
   end
 end

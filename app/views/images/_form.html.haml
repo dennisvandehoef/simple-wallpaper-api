@@ -12,6 +12,10 @@
       = f.file_field :file, direct_upload: true
 
   .field
+    = f.label :crop_gravity, 'Crop Focus'
+    = f.select :crop_gravity, Image::GRAVITIES.map { |g| [g.underscore.humanize, g] }, {}, class: 'select'
+
+  .field
     %h3 Select Tags
     - TagGroup.includes(:tags).order(:name).each do |tag_group|
       %strong= tag_group.name
