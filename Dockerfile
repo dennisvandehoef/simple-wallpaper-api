@@ -23,6 +23,12 @@ RUN bundle install --jobs 4
 # Copy the application code
 COPY . .
 
+# Ensure entrypoint script is executable
+RUN chmod +x bin/docker-entrypoint
+
+# Set entrypoint to run migrations before starting the app
+ENTRYPOINT ["./bin/docker-entrypoint"]
+
 # Default command – start the Rails server in development mode
 EXPOSE 3000
-CMD ["bash", "-c", "bundle exec rails server -b 0.0.0.0 -p 3000"]
+CMD ["./bin/rails", "server", "-b", "0.0.0.0", "-p", "3000"]
