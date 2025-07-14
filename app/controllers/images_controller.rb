@@ -1,5 +1,5 @@
 class ImagesController < ApplicationController
-  before_action :set_image, only: [ :show, :destroy ]
+  before_action :set_image, only: [ :show, :edit, :update, :destroy ]
 
   # GET /images
   def index
@@ -29,6 +29,23 @@ class ImagesController < ApplicationController
   # GET /images/:id
   def show; end
 
+  # GET /images/:id/edit
+  def edit; end
+
+  # PATCH/PUT /images/:id
+  def update
+    if @image.update(image_params)
+      if params[:image][:file].present?
+        @image.file.purge if @image.file.attached?
+        @image.file.attach(params[:image][:file])
+      end
+
+      redirect_to @image, notice: "Image was successfully updated."
+    else
+      render :edit, status: :unprocessable_entity
+    end
+  end
+
   # DELETE /images/:id
   def destroy
     @image.destroy
@@ -42,6 +59,6 @@ class ImagesController < ApplicationController
   end
 
   def image_params
-    params.require(:image).permit()
+    params.require(:image).permit(tag_ids: [])
   end
 end

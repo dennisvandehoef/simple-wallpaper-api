@@ -22,5 +22,5 @@ Rails.application.routes.draw do
     resources :tags, except: [ :index, :show ]
   end
 
-  resources :images, only: [ :index, :new, :create, :show, :destroy ]
+  resources :images, only: [ :index, :new, :create, :show, :edit, :update, :destroy ]
 end

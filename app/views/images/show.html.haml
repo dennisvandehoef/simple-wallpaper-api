@@ -9,8 +9,18 @@
   |
   = link_to 'Upload Another', new_image_path
   |
+  = link_to 'Edit', edit_image_path(@image)
+  |
   = button_to 'Delete', image_path(@image), method: :delete, data: { confirm: 'Are you sure?' }, form: { style: 'display:inline' }
 
 %h2 Image
 - if @image.file.attached?
   = image_tag url_for(@image.file)
+
+%h2 Tags
+- if @image.tags.any?
+  %ul
+    - @image.tags.each do |tag|
+      %li= tag.name
+- else
+  %p No tags assigned.

@@ -6,9 +6,19 @@
         - image.errors.full_messages.each do |message|
           %li= message
 
+  - if image.new_record?
+    .field
+      = f.label :file, 'Image file'
+      = f.file_field :file, direct_upload: true
+
   .field
-    = f.label :file, 'Image file'
-    = f.file_field :file, direct_upload: true
+    %h3 Select Tags
+    - TagGroup.includes(:tags).order(:name).each do |tag_group|
+      %strong= tag_group.name
+      = f.collection_check_boxes :tag_ids, tag_group.tags.order(:name), :id, :name do |b|
+        %div.checkbox
+          = b.check_box
+          = b.label
 
   .actions
-    = f.submit 'Upload'
+    = f.submit(image.new_record? ? 'Upload' : 'Save')

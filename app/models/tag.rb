@@ -1,5 +1,6 @@
 class Tag < ApplicationRecord
   belongs_to :tag_group
+  has_and_belongs_to_many :images
 
   validates :name, presence: true, uniqueness: { scope: :tag_group_id }
 

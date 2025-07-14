@@ -8,6 +8,7 @@
     %tr
       %th Thumbnail
       %th Uploaded At
+      %th Tags
       %th Actions
   %tbody
     - @images.each do |img|
@@ -16,6 +17,8 @@
           - if img.file.attached?
             = image_tag url_for(img.file.variant(resize_to_limit: [150, 150]))
         %td= l(img.created_at, format: :short)
+        %td= img.tags.pluck(:name).join(', ')
         %td
           = link_to 'Show', image_path(img)
+          = link_to 'Edit', edit_image_path(img)
           = button_to 'Delete', image_path(img), method: :delete, data: { confirm: 'Are you sure?' }, form: { style: 'display:inline' }

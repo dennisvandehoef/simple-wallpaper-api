@@ -1,0 +1,11 @@
+%h1 Edit Image
+
+- if @image.file.attached?
+  %figure
+    = image_tag url_for(@image.file.variant(resize_to_limit: [150, 150])), alt: 'Current image'
+    %figcaption Current image preview
+
+= render 'form', image: @image
+
+%p
+  = link_to 'Back', image_path(@image)
