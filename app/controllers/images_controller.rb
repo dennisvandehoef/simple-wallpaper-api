@@ -58,6 +58,7 @@ class ImagesController < ApplicationController
     grouped_active = {}
     season_and_holiday_tags = TagSelector::SeasonService.tags + TagSelector::HolidayService.tags
     daytime_tags = TagSelector::DaytimeService.tags
+    temperature_tags = TagSelector::TemperatureService.tags
 
     # Ensure holiday group is present even if no active holiday tags (to exclude out-of-season holiday images).
     holiday_group = TagGroup.find_by(name: "Holidays")
@@ -67,11 +68,19 @@ class ImagesController < ApplicationController
     daytime_group = TagGroup.find_by(name: "Daytime")
     grouped_active[daytime_group.id] ||= [] if daytime_group
 
+    # Ensure temperature group present even if no active tag (should always have 1)
+    temp_group = TagGroup.find_by(name: "Temperature")
+    grouped_active[temp_group.id] ||= [] if temp_group
+
     season_and_holiday_tags.each do |tag|
       (grouped_active[tag.tag_group_id] ||= []) << tag.id
     end
 
     daytime_tags.each do |tag|
+      (grouped_active[tag.tag_group_id] ||= []) << tag.id
+    end
+
+    temperature_tags.each do |tag|
       (grouped_active[tag.tag_group_id] ||= []) << tag.id
     end
 
