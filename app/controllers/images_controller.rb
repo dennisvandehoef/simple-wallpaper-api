@@ -54,14 +54,26 @@ class ImagesController < ApplicationController
 
   # GET /random_image
   def random
-    # Determine active system tags (season/holiday etc.)
-    active_tags = TagSelector::SeasonService.tags + TagSelector::HolidayService.tags
+    # Build active tags grouped by their tag_group_id
+    grouped_active = {}
+    (TagSelector::SeasonService.tags + TagSelector::HolidayService.tags).each do |tag|
+      (grouped_active[tag.tag_group_id] ||= []) << tag.id
+    end
 
-    scope = Image.joins(:file_attachment) # ensure file attached
-    scope = scope.joins(:tags).where(tags: { id: active_tags }) if active_tags.any?
+    # Preload tags to avoid N+1
+    images_scope = Image.joins(:file_attachment).includes(:tags)
 
-    # Pick random image matching active tags; if none found, fallback to any attached image
-    image = scope.order(Arel.sql("RANDOM()")).first || Image.joins(:file_attachment).order(Arel.sql("RANDOM()")).first
+    # Retrieve a list of candidate images in random order and pick first that satisfies rules
+    image = images_scope.order(Arel.sql("RANDOM()")).detect do |img|
+      grouped_active.all? do |group_id, active_tag_ids|
+        img_tags_in_group = img.tags.select { |t| t.tag_group_id == group_id }
+        # If image has no tags from this group, it's automatically eligible; otherwise must match at least one active tag
+        img_tags_in_group.empty? || (img_tags_in_group.any? { |t| active_tag_ids.include?(t.id) })
+      end
+    end
+
+    # Fallback to any image if none match criteria
+    image ||= images_scope.order(Arel.sql("RANDOM()")).first
 
     unless image&.file&.attached?
       head :not_found and return
