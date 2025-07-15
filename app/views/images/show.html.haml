@@ -15,7 +15,7 @@
 
 %h2 Image
 - if @image.file.attached?
-  = image_tag url_for(@image.file)
+  = image_tag url_for(@image.file.variant(resize_to_limit: [150, 150]))
 
 %h2 Tags
 - if @image.tags.any?
