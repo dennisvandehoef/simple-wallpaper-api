@@ -54,7 +54,14 @@ class ImagesController < ApplicationController
 
   # GET /random_image
   def random
-    image = Image.joins(file_attachment_attachment: :blob).order(Arel.sql("RANDOM()")).first || Image.joins(:file_attachment).order(Arel.sql("RANDOM()")).first rescue Image.order(Arel.sql("RANDOM()")).first
+    # Determine active system tags (season/holiday etc.)
+    active_tags = TagSelector::SeasonService.tags + TagSelector::HolidayService.tags
+
+    scope = Image.joins(:file_attachment) # ensure file attached
+    scope = scope.joins(:tags).where(tags: { id: active_tags }) if active_tags.any?
+
+    # Pick random image matching active tags; if none found, fallback to any attached image
+    image = scope.order(Arel.sql("RANDOM()")).first || Image.joins(:file_attachment).order(Arel.sql("RANDOM()")).first
 
     unless image&.file&.attached?
       head :not_found and return
