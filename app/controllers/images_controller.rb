@@ -54,10 +54,22 @@ class ImagesController < ApplicationController
 
   # GET /random_image
   def random
-    # Build active tags grouped by their tag_group_id
+    # Build active tags grouped by their tag_group_id (seasons & holidays)
     grouped_active = {}
     (TagSelector::SeasonService.tags + TagSelector::HolidayService.tags).each do |tag|
       (grouped_active[tag.tag_group_id] ||= []) << tag.id
+    end
+
+    # Fetch current weather and include its tag(s) if available
+    begin
+      weather_data = OpenMeteoService.fetch
+      weather_code = weather_data.dig("daily", "weather_code", 0)
+      weather_tags = TagSelector::WeatherService.tags(weather_code)
+      weather_tags.each do |tag|
+        (grouped_active[tag.tag_group_id] ||= []) << tag.id
+      end
+    rescue StandardError => e
+      Rails.logger.error("Weather tag retrieval failed: #{e.message}")
     end
 
     # Preload tags to avoid N+1
