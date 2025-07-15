@@ -56,7 +56,13 @@ class ImagesController < ApplicationController
   def random
     # Build active tags grouped by their tag_group_id (seasons & holidays)
     grouped_active = {}
-    (TagSelector::SeasonService.tags + TagSelector::HolidayService.tags).each do |tag|
+    season_and_holiday_tags = TagSelector::SeasonService.tags + TagSelector::HolidayService.tags
+
+    # Ensure holiday group is present even if no active holiday tags (to exclude out-of-season holiday images).
+    holiday_group = TagGroup.find_by(name: "Holidays")
+    grouped_active[holiday_group.id] ||= [] if holiday_group
+
+    season_and_holiday_tags.each do |tag|
       (grouped_active[tag.tag_group_id] ||= []) << tag.id
     end
 
@@ -64,7 +70,7 @@ class ImagesController < ApplicationController
     begin
       weather_data = OpenMeteoService.fetch
       weather_code = weather_data.dig("daily", "weather_code", 0)
-      weather_tags = TagSelector::WeatherService.tags(weather_code)
+      weather_tags = ::TagSelector::WeatherService.tags(weather_code)
       weather_tags.each do |tag|
         (grouped_active[tag.tag_group_id] ||= []) << tag.id
       end
@@ -79,13 +85,16 @@ class ImagesController < ApplicationController
     image = images_scope.order(Arel.sql("RANDOM()")).detect do |img|
       grouped_active.all? do |group_id, active_tag_ids|
         img_tags_in_group = img.tags.select { |t| t.tag_group_id == group_id }
-        # If image has no tags from this group, it's automatically eligible; otherwise must match at least one active tag
-        img_tags_in_group.empty? || (img_tags_in_group.any? { |t| active_tag_ids.include?(t.id) })
+
+        if img_tags_in_group.empty?
+          # Image has no tags for this group – group does not affect eligibility
+          true
+        else
+          # Image has tags in this group; if there are active tags, require overlap, otherwise exclude
+          active_tag_ids.present? && img_tags_in_group.any? { |t| active_tag_ids.include?(t.id) }
+        end
       end
     end
-
-    # Fallback to any image if none match criteria
-    image ||= images_scope.order(Arel.sql("RANDOM()")).first
 
     unless image&.file&.attached?
       head :not_found and return
