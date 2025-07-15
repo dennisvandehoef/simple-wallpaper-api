@@ -55,45 +55,27 @@ class ImagesController < ApplicationController
   # GET /random_image
   def random
     # Build active tags grouped by their tag_group_id (seasons & holidays)
-    grouped_active = {}
-    season_and_holiday_tags = TagSelector::SeasonService.tags + TagSelector::HolidayService.tags
-    daytime_tags = TagSelector::DaytimeService.tags
-    temperature_tags = TagSelector::TemperatureService.tags
+    grouped_active = Hash.new { |h, k| h[k] = [] }
 
-    # Ensure holiday group is present even if no active holiday tags (to exclude out-of-season holiday images).
-    holiday_group = TagGroup.find_by(name: "Holidays")
-    grouped_active[holiday_group.id] ||= [] if holiday_group
+    # List all selector services we want to consider by default (without API calls)
+    selector_services = [
+      TagSelector::SeasonService,
+      TagSelector::HolidayService,
+      TagSelector::DaytimeService,
+      TagSelector::TemperatureService,
+      TagSelector::WeatherConditionService
+    ]
 
-    # Ensure daytime group present even if no tag (should always have 1)
-    daytime_group = TagGroup.find_by(name: "Daytime")
-    grouped_active[daytime_group.id] ||= [] if daytime_group
-
-    # Ensure temperature group present even if no active tag (should always have 1)
-    temp_group = TagGroup.find_by(name: "Temperature")
-    grouped_active[temp_group.id] ||= [] if temp_group
-
-    season_and_holiday_tags.each do |tag|
-      (grouped_active[tag.tag_group_id] ||= []) << tag.id
+    # Ensure their groups exist in the hash even if no active tag is returned
+    TagGroup.where(name: [ "Holidays", "Weather Conditions", "Seasons", "Daytime", "Temperature" ]).find_each do |tg|
+      grouped_active[tg.id] # touch to initialise
     end
 
-    daytime_tags.each do |tag|
-      (grouped_active[tag.tag_group_id] ||= []) << tag.id
-    end
-
-    temperature_tags.each do |tag|
-      (grouped_active[tag.tag_group_id] ||= []) << tag.id
-    end
-
-    # Fetch current weather and include its tag(s) if available
-    begin
-      weather_data = OpenMeteoService.fetch
-      weather_code = weather_data.dig("daily", "weather_code", 0)
-      weather_tags = ::TagSelector::WeatherService.tags(weather_code)
-      weather_tags.each do |tag|
-        (grouped_active[tag.tag_group_id] ||= []) << tag.id
+    # Collect active tags from each selector
+    selector_services.each do |svc|
+      svc.tags.each do |tag|
+        grouped_active[tag.tag_group_id] << tag.id
       end
-    rescue StandardError => e
-      Rails.logger.error("Weather tag retrieval failed: #{e.message}")
     end
 
     # Preload tags to avoid N+1
