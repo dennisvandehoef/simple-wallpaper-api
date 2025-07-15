@@ -57,12 +57,21 @@ class ImagesController < ApplicationController
     # Build active tags grouped by their tag_group_id (seasons & holidays)
     grouped_active = {}
     season_and_holiday_tags = TagSelector::SeasonService.tags + TagSelector::HolidayService.tags
+    daytime_tags = TagSelector::DaytimeService.tags
 
     # Ensure holiday group is present even if no active holiday tags (to exclude out-of-season holiday images).
     holiday_group = TagGroup.find_by(name: "Holidays")
     grouped_active[holiday_group.id] ||= [] if holiday_group
 
+    # Ensure daytime group present even if no tag (should always have 1)
+    daytime_group = TagGroup.find_by(name: "Daytime")
+    grouped_active[daytime_group.id] ||= [] if daytime_group
+
     season_and_holiday_tags.each do |tag|
+      (grouped_active[tag.tag_group_id] ||= []) << tag.id
+    end
+
+    daytime_tags.each do |tag|
       (grouped_active[tag.tag_group_id] ||= []) << tag.id
     end
 
