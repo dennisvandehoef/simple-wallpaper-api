@@ -64,6 +64,4 @@ group :test do
   gem "selenium-webdriver"
 end
 
-gem "redis", "~> 5.0"
-gem "resque"
 gem "mini_magick", "~> 4.13"
