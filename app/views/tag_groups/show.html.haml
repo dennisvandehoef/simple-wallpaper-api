@@ -19,13 +19,21 @@
   %thead
     %tr
       %th Name
+      %th Images
       - unless @tag_group.system?
         %th
   %tbody
-    - @tag_group.tags.order(:name).each do |tag|
+    - @tags.each do |tag|
       %tr
         %td= tag.name
+        %td= tag.respond_to?(:images_count) ? tag.images_count : tag.images.size
         - unless tag.system?
           %td
             = link_to 'Edit', edit_tag_group_tag_path(@tag_group, tag)
             = button_to 'Delete', tag_group_tag_path(@tag_group, tag), method: :delete, data: { confirm: 'Are you sure?' }, form: { style: 'display:inline' }
+
+    / Row for images without any tag from this group
+    %tr
+      %td
+        %em none
+      %td= @images_without_group_tag

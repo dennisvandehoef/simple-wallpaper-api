@@ -17,7 +17,16 @@ class TagGroupsController < ApplicationController
 
   # GET /tag_groups/:id
   def show
-    # Renders show view (default) or redirects if needed
+    # Preload tags together with count of attached images to avoid N+1 queries
+    @tags = @tag_group.tags
+                         .left_joins(:images)
+                         .select("tags.*, COUNT(images.id) AS images_count")
+                         .group("tags.id")
+                         .order(:name)
+
+    # Count images that do NOT have any tag belonging to this group
+    images_with_group_tag_ids = Image.joins(:tags).where(tags: { tag_group_id: @tag_group.id }).select(:id)
+    @images_without_group_tag = Image.where.not(id: images_with_group_tag_ids).count
   end
 
   # POST /tag_groups
