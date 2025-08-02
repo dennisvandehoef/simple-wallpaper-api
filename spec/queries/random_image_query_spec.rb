@@ -47,57 +47,41 @@ RSpec.describe RandomImageQuery do
     double(name, tags: tags)
   end
 
-  # ---------------------------------------------------------------------------
-  # Scenarios matrix – each entry is [description, tags, expected]
-  #   – expected: true means image should be chosen when first in order list
-  # ---------------------------------------------------------------------------
-  scenarios = [
-    [
-      "exact match, one tag per group",
-      -> { [ summer_tag, day_tag, xmas_tag, mild_tag, rain_tag ] },
-      true
-    ],
-    [
-      "multiple tags in temperature & weather – at least one overlaps",
-      -> { [ summer_tag, day_tag, xmas_tag, mild_tag, icy_tag, hot_tag, rain_tag, snow_tag ] },
-      true
-    ],
-    [
-      "season mismatch (has Winter instead of Summer)",
-      -> { [ winter_tag, day_tag, xmas_tag, mild_tag, rain_tag ] },
-      false
-    ],
-    [
-      "no holiday tag (group missing) should still qualify",
-      -> { [ summer_tag, day_tag, mild_tag, rain_tag ] },
-      true
-    ],
-    [
-      "multi-tags in season none overlapping (Winter + another)",
-      -> { [ winter_tag, night_tag, xmas_tag, mild_tag, rain_tag ] },
-      false
-    ],
-    [
-      "multi tags in weather but none overlapping (Clear + Snow)",
-      -> { [ summer_tag, day_tag, xmas_tag, mild_tag, clear_tag, snow_tag ] },
-      false
-    ]
-  ]
-
-  # ---------------------------------------------------------------------------
-  #   Dynamically create examples based on scenarios matrix
-  # ---------------------------------------------------------------------------
-  scenarios.each do |desc, tag_list, should_match|
-    it "#{desc} ⇒ #{should_match ? "eligible" : "ineligible"}" do
-      candidate = img(desc, instance_exec(&tag_list))
+  context "eligibility rules" do
+    it "is eligible with exact match (1 tag per group)" do
+      candidate = img("Exact", [ summer_tag, day_tag, xmas_tag, mild_tag, rain_tag ])
       allow(Image).to receive_message_chain(:joins, :includes).and_return(double(order: [ candidate ]))
+      expect(described_class.call).to eq(candidate)
+    end
 
-      result = described_class.call
-      if should_match
-        expect(result).to eq(candidate)
-      else
-        expect(result).to be_nil
-      end
+    it "is eligible with multiple temp/weather tags as long as one matches" do
+      candidate = img("MultiOverlap", [ summer_tag, day_tag, xmas_tag, mild_tag, icy_tag, hot_tag, rain_tag, snow_tag ])
+      allow(Image).to receive_message_chain(:joins, :includes).and_return(double(order: [ candidate ]))
+      expect(described_class.call).to eq(candidate)
+    end
+
+    it "is ineligible when season mismatched" do
+      candidate = img("SeasonMismatch", [ winter_tag, day_tag, xmas_tag, mild_tag, rain_tag ])
+      allow(Image).to receive_message_chain(:joins, :includes).and_return(double(order: [ candidate ]))
+      expect(described_class.call).to be_nil
+    end
+
+    it "is eligible when holiday group missing" do
+      candidate = img("NoHoliday", [ summer_tag, day_tag, mild_tag, rain_tag ])
+      allow(Image).to receive_message_chain(:joins, :includes).and_return(double(order: [ candidate ]))
+      expect(described_class.call).to eq(candidate)
+    end
+
+    it "is ineligible when multiple season tags but none match" do
+      candidate = img("MultiSeasonNoMatch", [ winter_tag, night_tag, xmas_tag, mild_tag, rain_tag ])
+      allow(Image).to receive_message_chain(:joins, :includes).and_return(double(order: [ candidate ]))
+      expect(described_class.call).to be_nil
+    end
+
+    it "is ineligible when multiple weather tags but none match" do
+      candidate = img("WeatherNoMatch", [ summer_tag, day_tag, xmas_tag, mild_tag, clear_tag, snow_tag ])
+      allow(Image).to receive_message_chain(:joins, :includes).and_return(double(order: [ candidate ]))
+      expect(described_class.call).to be_nil
     end
   end
 
