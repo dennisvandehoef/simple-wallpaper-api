@@ -25,16 +25,22 @@ class RandomImageQuery
     images_scope = Image.joins(:file_attachment).includes(:tags)
     grouped_active = build_grouped_active_tags
 
-    last_id = Rails.cache.read("random_image_query:last_image_id")
+    cache_key = "random_image_query:last_image_ids"
+    last_ids  = Rails.cache.fetch(cache_key) { [] }
 
     selected = images_scope.order(Arel.sql("RANDOM()")).detect do |img|
-      eligible?(img, grouped_active) && img.id != last_id
+      eligible?(img, grouped_active) && !last_ids.include?(img.id)
     end
 
-    # Fallback: if all eligible images equal last_id (e.g., only one image), allow repeat
+    # Fallback: if all eligible images have been returned recently (e.g., fewer than 4 images), allow repeat
     selected ||= images_scope.order(Arel.sql("RANDOM()")).detect { |img| eligible?(img, grouped_active) }
 
-    Rails.cache.write("random_image_query:last_image_id", selected.id) if selected
+    if selected
+      last_ids << selected.id
+      last_ids = last_ids.last(3) # remember at most 3 ids
+      Rails.cache.write(cache_key, last_ids)
+    end
+
     selected
   end
 

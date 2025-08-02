@@ -114,4 +114,29 @@ RSpec.describe RandomImageQuery do
     second = described_class.call
     expect(second).not_to eq(first)
   end
+
+  it "does not repeat any of the last 3 images when enough eligible images exist" do
+    img1 = img("Img1", [ summer_tag, day_tag, xmas_tag, mild_tag, rain_tag ])
+    img2 = img("Img2", [ summer_tag, day_tag, xmas_tag, mild_tag, rain_tag ])
+    img3 = img("Img3", [ summer_tag, day_tag, xmas_tag, mild_tag, rain_tag ])
+    img4 = img("Img4", [ summer_tag, day_tag, xmas_tag, mild_tag, rain_tag ])
+
+    Rails.cache.clear
+
+    # First call → img1
+    allow(Image).to receive_message_chain(:joins, :includes).and_return(double(order: [ img1, img2, img3, img4 ]))
+    expect(described_class.call).to eq(img1)
+
+    # Second call → img2
+    allow(Image).to receive_message_chain(:joins, :includes).and_return(double(order: [ img2, img3, img4, img1 ]))
+    expect(described_class.call).to eq(img2)
+
+    # Third call → img3
+    allow(Image).to receive_message_chain(:joins, :includes).and_return(double(order: [ img3, img4, img1, img2 ]))
+    expect(described_class.call).to eq(img3)
+
+    # Fourth call → img4 (img1 excluded because in last 3)
+    allow(Image).to receive_message_chain(:joins, :includes).and_return(double(order: [ img4, img1, img2, img3 ]))
+    expect(described_class.call).to eq(img4)
+  end
 end
