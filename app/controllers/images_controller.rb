@@ -54,47 +54,7 @@ class ImagesController < ApplicationController
 
   # GET /random_image
   def random
-    # Build active tags grouped by their tag_group_id (seasons & holidays)
-    grouped_active = Hash.new { |h, k| h[k] = [] }
-
-    # List all selector services we want to consider by default (without API calls)
-    selector_services = [
-      TagSelector::SeasonService,
-      TagSelector::HolidayService,
-      TagSelector::DaytimeService,
-      TagSelector::TemperatureService,
-      TagSelector::WeatherConditionService
-    ]
-
-    # Ensure their groups exist in the hash even if no active tag is returned
-    TagGroup.where(name: [ "Holidays", "Weather Conditions", "Seasons", "Daytime", "Temperature" ]).find_each do |tg|
-      grouped_active[tg.id] # touch to initialise
-    end
-
-    # Collect active tags from each selector
-    selector_services.each do |svc|
-      svc.tags.each do |tag|
-        grouped_active[tag.tag_group_id] << tag.id
-      end
-    end
-
-    # Preload tags to avoid N+1
-    images_scope = Image.joins(:file_attachment).includes(:tags)
-
-    # Retrieve a list of candidate images in random order and pick first that satisfies rules
-    image = images_scope.order(Arel.sql("RANDOM()")).detect do |img|
-      grouped_active.all? do |group_id, active_tag_ids|
-        img_tags_in_group = img.tags.select { |t| t.tag_group_id == group_id }
-
-        if img_tags_in_group.empty?
-          # Image has no tags for this group – group does not affect eligibility
-          true
-        else
-          # Image has tags in this group; if there are active tags, require overlap, otherwise exclude
-          active_tag_ids.present? && img_tags_in_group.any? { |t| active_tag_ids.include?(t.id) }
-        end
-      end
-    end
+    image = RandomImageQuery.call
 
     unless image&.file&.attached?
       head :not_found and return
