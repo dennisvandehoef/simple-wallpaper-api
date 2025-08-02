@@ -39,34 +39,28 @@ module TagSelector
     }.freeze
 
     class << self
-      def tag(code)
-        name = CODE_TO_NAME[code.to_i]
-        return nil unless name
-
-        Tag.find_by(name: name, system: true)
-      end
-
-      # Returns an array with the weather-condition tag for a given WMO code.
-      # If the code is unknown or no matching system tag exists, returns an empty array.
-      def tags(code)
-        tag(code).presence ? [ tag(code) ] : []
-      end
-
-      # Fetches the current weather code from OpenMeteoService and returns
-      # the corresponding system tag(s). Falls back to an empty array on
-      # API errors or when no code/tag is available.
-      def current_tags
-        begin
-          data = OpenMeteoService.fetch
-          code = data.dig("daily", "weather_code", 0)
-        rescue StandardError => e
-          Rails.logger.error("WeatherService: #{e.message}")
-          return []
+      def tags(code = :__current__)
+        if code == :__current__
+          code = fetch_current_code
         end
 
         return [] unless code
 
-        tags(code)
+
+        name = CODE_TO_NAME[code.to_i]
+        return [] unless name
+
+        [ Tag.find_by(name: name, system: true) ].compact
+      end
+
+      private
+
+      def fetch_current_code
+        data = OpenMeteoService.fetch
+        data.dig("daily", "weather_code", 0)
+      rescue StandardError => e
+        Rails.logger.error("WeatherService: #{e.message}")
+        nil
       end
     end
   end

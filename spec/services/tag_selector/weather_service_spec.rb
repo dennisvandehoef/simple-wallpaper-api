@@ -4,15 +4,6 @@ RSpec.describe TagSelector::WeatherService, type: :service do
   let!(:group) { TagGroup.create!(name: "Weather Conditions", system: true) }
   let!(:rain_tag) { Tag.create!(name: "Rain", tag_group: group, system: true) }
 
-  describe ".tag" do
-    it "returns the correct tag for a known code" do
-      expect(described_class.tag(63)).to eq(rain_tag)
-    end
-
-    it "returns nil for an unknown code" do
-      expect(described_class.tag(999)).to be_nil
-    end
-  end
 
   describe ".tags" do
     it "wraps the tag in an array when present" do
@@ -24,14 +15,14 @@ RSpec.describe TagSelector::WeatherService, type: :service do
     end
   end
 
-  describe ".current_tags" do
+  describe ".tags (no argument)" do
     context "when OpenMeteoService returns a valid code" do
       before do
         allow(OpenMeteoService).to receive(:fetch).and_return({ "daily" => { "weather_code" => [ 63 ] } })
       end
 
       it "returns the mapped tag" do
-        expect(described_class.current_tags).to eq([ rain_tag ])
+        expect(described_class.tags).to eq([ rain_tag ])
       end
     end
 
@@ -41,7 +32,7 @@ RSpec.describe TagSelector::WeatherService, type: :service do
       end
 
       it "returns empty array" do
-        expect(described_class.current_tags).to eq([])
+        expect(described_class.tags).to eq([])
       end
     end
 
@@ -52,7 +43,7 @@ RSpec.describe TagSelector::WeatherService, type: :service do
 
       it "logs the error and returns empty array" do
         expect(Rails.logger).to receive(:error).with(/WeatherService: api boom/)
-        expect(described_class.current_tags).to eq([])
+        expect(described_class.tags).to eq([])
       end
     end
   end
