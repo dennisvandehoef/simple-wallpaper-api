@@ -44,7 +44,9 @@ RSpec.describe RandomImageQuery do
 
   # Helper to build an Image double with given tags
   def img(name, tags)
-    double(name, tags: tags)
+    @img_seq ||= 0
+    @img_seq += 1
+    instance_double(Image, id: @img_seq, tags: tags)
   end
 
   context "eligibility rules" do
@@ -95,5 +97,21 @@ RSpec.describe RandomImageQuery do
     allow(Image).to receive_message_chain(:joins, :includes).and_return(double(order: [ ineligible, eligible ]))
 
     expect(described_class.call).to eq(eligible)
+  end
+
+  it "does not return the same image twice in a row when multiple eligible images exist" do
+    img1 = img("Img1", [ summer_tag, day_tag, xmas_tag, mild_tag, rain_tag ])
+    img2 = img("Img2", [ summer_tag, day_tag, xmas_tag, mild_tag, rain_tag ])
+
+    allow(Image).to receive_message_chain(:joins, :includes).and_return(double(order: [ img1, img2 ]))
+    Rails.cache.clear
+
+    first = described_class.call
+    expect([ img1, img2 ]).to include(first)
+
+    # Next call with reversed order to ensure alternative available
+    allow(Image).to receive_message_chain(:joins, :includes).and_return(double(order: [ img2, img1 ]))
+    second = described_class.call
+    expect(second).not_to eq(first)
   end
 end

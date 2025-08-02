@@ -25,7 +25,17 @@ class RandomImageQuery
     images_scope = Image.joins(:file_attachment).includes(:tags)
     grouped_active = build_grouped_active_tags
 
-    images_scope.order(Arel.sql("RANDOM()")).detect { |img| eligible?(img, grouped_active) }
+    last_id = Rails.cache.read("random_image_query:last_image_id")
+
+    selected = images_scope.order(Arel.sql("RANDOM()")).detect do |img|
+      eligible?(img, grouped_active) && img.id != last_id
+    end
+
+    # Fallback: if all eligible images equal last_id (e.g., only one image), allow repeat
+    selected ||= images_scope.order(Arel.sql("RANDOM()")).detect { |img| eligible?(img, grouped_active) }
+
+    Rails.cache.write("random_image_query:last_image_id", selected.id) if selected
+    selected
   end
 
   private
