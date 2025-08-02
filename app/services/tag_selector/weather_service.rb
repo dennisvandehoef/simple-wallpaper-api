@@ -46,8 +46,27 @@ module TagSelector
         Tag.find_by(name: name, system: true)
       end
 
+      # Returns an array with the weather-condition tag for a given WMO code.
+      # If the code is unknown or no matching system tag exists, returns an empty array.
       def tags(code)
         tag(code).presence ? [ tag(code) ] : []
+      end
+
+      # Fetches the current weather code from OpenMeteoService and returns
+      # the corresponding system tag(s). Falls back to an empty array on
+      # API errors or when no code/tag is available.
+      def current_tags
+        begin
+          data = OpenMeteoService.fetch
+          code = data.dig("daily", "weather_code", 0)
+        rescue StandardError => e
+          Rails.logger.error("WeatherService: #{e.message}")
+          return []
+        end
+
+        return [] unless code
+
+        tags(code)
       end
     end
   end

@@ -12,7 +12,7 @@ class RandomImageQuery
     TagSelector::HolidayService,
     TagSelector::DaytimeService,
     TagSelector::TemperatureService,
-    TagSelector::WeatherConditionService
+    TagSelector::WeatherService
   ].freeze
 
   # Returns a single Image record that matches the current active tag context
