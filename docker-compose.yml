@@ -16,3 +16,17 @@ services:
     volumes:
       - ./:/rails
     restart: unless-stopped
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        RUBY_VERSION: "3.3.6"
+    image: simple_wallpaper_api:latest
+    environment:
+      RAILS_ENV: test
+      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+    volumes:
+      - ./:/rails
+    restart: unless-stopped

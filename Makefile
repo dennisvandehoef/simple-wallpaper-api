@@ -4,7 +4,9 @@
 # secrets - ensure required secret files exist
 # build   - (re)build images only (depends on secrets)
 # start   - start containers without rebuild (depends on secrets)
+# rspec   - run rspec tests (depends on secrets)
 # bash    - open interactive bash shell inside the app service container (depends on secrets)
+# bash/test - open interactive bash shell inside the test service container (depends on secrets)
 # ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
@@ -41,6 +43,15 @@ start: secrets
 	docker compose up
 
 # ------------------------------------------------------------------------------
+# rspec  - run rspec tests
+# ------------------------------------------------------------------------------
+rspec: secrets
+	@echo "[rspec] Running rspec tests" && \
+	RAILS_MASTER_KEY=$$(cat config/master.key | tr -d '\n') \
+	SECRET_KEY_BASE=$$(cat config/secret_key_base | tr -d '\n') \
+	docker compose run --rm test rspec
+
+# ------------------------------------------------------------------------------
 # bash  - open interactive bash shell inside the app service container
 # ------------------------------------------------------------------------------
 bash: secrets
@@ -48,3 +59,12 @@ bash: secrets
 	RAILS_MASTER_KEY=$$(cat config/master.key | tr -d '\n') \
 	SECRET_KEY_BASE=$$(cat config/secret_key_base | tr -d '\n') \
 	docker compose run --rm app bash
+
+# ------------------------------------------------------------------------------
+# bash/test  - open interactive bash shell inside the test service container
+# ------------------------------------------------------------------------------
+bash/test: secrets
+	@echo "[bash] Launching interactive bash in app container" && \
+	RAILS_MASTER_KEY=$$(cat config/master.key | tr -d '\n') \
+	SECRET_KEY_BASE=$$(cat config/secret_key_base | tr -d '\n') \
+	docker compose run --rm test bash
